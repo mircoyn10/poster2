@@ -42,18 +42,29 @@
 </template>
 
 <script setup>
-import { usePage } from '@inertiajs/vue3'; // Importa il composable usePage di Inertia.js
+import { usePage } from '@inertiajs/vue3'; 
+import { ref, onMounted, watch } from 'vue';
 
 // Ottieni i props dalla pagina corrente tramite Inertia
 const { props } = usePage();
-const article = props.article;  // `article` è ora definito nei props
+let article = ref(props.article);  // Usa una variabile reattiva per article
 
 // Funzione per formattare la data
 const formatDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Date(dateString).toLocaleDateString(undefined, options);
 };
+
+// Aggiorna l'articolo ogni volta che cambia
+watch(() => props.article, (newArticle) => {
+  article.value = newArticle;
+});
+
+onMounted(() => {
+  article.value = props.article;
+});
 </script>
+
 
 <style scoped>
 /* Stili specifici per la pagina */

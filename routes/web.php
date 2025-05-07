@@ -31,9 +31,11 @@ Route::middleware(['web'])->group(function () {
 
 });
 
+// routes/web.php
+Route::get('/articles/latest', [ArticleController::class, 'latest']);
 
 Route::get('/articles', [ArticleController::class, 'index']);
-Route::get('/article/{id}', [ArticleController::class, 'show'])->name('articles.show');
+Route::get('/article/{id}', [ArticleController::class, 'show']);
 Route::post('/articles', [ArticleController::class, 'store']);
 
 // Rotte per la knowledge base

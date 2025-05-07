@@ -55,4 +55,16 @@ class ArticleController extends Controller
             'article' => $article,
         ]);
     }
+    public function latest()
+    {
+        // Recupera i 5 articoli più recenti
+        $latestArticles = Article::with('user')->orderBy('created_at', 'desc')->take(2)->get();
+
+        // Log degli articoli più recenti
+        \Log::info('Latest articles fetched:', ['latestArticles' => $latestArticles]);
+
+        // Restituisci i dati come JSON
+        return response()->json(['data' => $latestArticles]);
+    }
+
 }

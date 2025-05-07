@@ -2,14 +2,12 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'; 
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faInstagram, faTiktok, faTwitter, faFacebook } from '@fortawesome/free-brands-svg-icons';
-import { faTrash, faSpinner, faCopy } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faSpinner, faCopy, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
-// Add icons to the library
-library.add(faInstagram, faTiktok, faTwitter, faFacebook, faTrash, faCopy, faSpinner);
+library.add(faInstagram, faTiktok, faTwitter, faFacebook, faTrash, faCopy, faPaperPlane, faSpinner);
 
-// Reactive data
 const userPrompt = ref('');
 const userCoin = ref(0);
 const selectedSocials = ref({
@@ -19,22 +17,13 @@ const selectedSocials = ref({
   facebook: false
 });
 const promptHistory = ref([]);
-const isAuthenticated = ref(true);
 const isLoading = ref(false);
-const platformLoading = ref({
-  instagram: false,
-  tiktok: false,
-  twitter: false,
-  facebook: false
-});
 const notificationMessage = ref('');
 
 // Axios configuration
 axios.defaults.withCredentials = true;
 axios.defaults.baseURL = 'http://127.0.0.1:8000';
-axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-// Function to load saved history
 const loadSavedHistory = async () => {
   try {
     const result = await axios.get('/search-history');
@@ -52,7 +41,6 @@ const loadSavedHistory = async () => {
   }
 };
 
-// Load user coins
 const loadUserCoins = async () => {
   try {
     const response = await axios.get('/user/coin');
@@ -62,18 +50,15 @@ const loadUserCoins = async () => {
   }
 };
 
-// Toggle platform selection
 const toggleSelection = (platform) => {
   selectedSocials.value[platform] = !selectedSocials.value[platform];
 };
 
-// Show notification message
 const showNotification = (message) => {
   notificationMessage.value = message;
   setTimeout(() => notificationMessage.value = '', 3000);
 };
 
-// Submit the prompt
 const submitPrompt = async () => {
   const selectedPlatforms = Object.keys(selectedSocials.value).filter(platform => selectedSocials.value[platform]);
   
@@ -96,7 +81,6 @@ const submitPrompt = async () => {
 
   try {
     for (const platform of selectedPlatforms) {
-      platformLoading.value[platform] = true;
       const response = await axios.post('/api/generate-content', {
         prompt: userPrompt.value,
         platforms: { [platform]: true }
@@ -119,11 +103,9 @@ const submitPrompt = async () => {
     }
   } finally {
     isLoading.value = false;
-    Object.keys(platformLoading.value).forEach(key => platformLoading.value[key] = false);
   }
 };
 
-// Clear history
 const clearHistory = async () => {
   try {
     await axios.post('/clear-history');
@@ -134,7 +116,6 @@ const clearHistory = async () => {
   }
 };
 
-// Copy to clipboard
 const copyToClipboard = (text) => {
   navigator.clipboard.writeText(text).then(() => {
     showNotification('Copied to clipboard!');
@@ -143,215 +124,184 @@ const copyToClipboard = (text) => {
   });
 };
 
-// On component mount
 onMounted(async () => {
   loadSavedHistory();
   loadUserCoins();
 });
 </script>
 
-<style scoped>
-/* Global styles */
-body {
-  background: #f8fafc;
-}
-
-.text-blue-500 {
-  color: #3b82f6;
-}
-
-.bg-gray-100 {
-  background-color: #f3f4f6;
-}
-
-/* Animazioni ed effetti di interazione */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.5s;
-}
-
-.fade-enter, .fade-leave-to {
-  opacity: 0;
-}
-
-/* Pulsante di invio con effetto hover */
-button:active {
-  transform: scale(0.95);
-}
-
-.platform-icon {
-  font-size: 1.5rem;
-  margin-right: 0.5rem;
-}
-
-/* Copia pulsante che appare al passaggio del mouse */
-.copy-button {
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.message-bubble:hover .copy-button {
-  opacity: 1;
-}
-
-/* Modernizzazione del layout */
-.bg-custom-background {
-  background: #e5e7eb;
-}
-
-.bg-custom-chatbox {
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-
-.platform-selected {
-  border: 2px solid #34d399;
-}
-
-.loader-content {
-  color: white;
-  font-size: 2rem;
-}
-</style>
-
 <template>
-  <!-- Notifica temporanea -->
-  <div v-if="notificationMessage" class="fixed top-4 right-4 bg-indigo-500 text-white p-4 rounded-lg shadow-lg z-50 transition-opacity duration-300" :class="{'opacity-0': !notificationMessage}">
-    {{ notificationMessage }}
-  </div>
-
-  <!-- Caricamento globale -->
-  <div v-if="isLoading" class="fixed-loader">
-    <div class="loader-content flex items-center space-x-4">
-      <font-awesome-icon :icon="['fas', 'spinner']" spin />
-      <span>Generazione contenuto in corso...</span>
+  <div class="chat-container">
+    <!-- Notification -->
+    <div v-if="notificationMessage" class="notification">
+      {{ notificationMessage }}
     </div>
-  </div>
 
-  <div class="flex flex-col items-center justify-center min-h-screen p-4 bg-custom-background">
-    <!-- Chatbox principale -->
-    <div class="bg-custom-chatbox shadow-lg rounded-xl p-6 max-w-2xl w-full mb-8">
-      <!-- Logo e Titolo -->
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center space-x-4">
-          <h1 class="text-3xl font-bold text-gray-900">Poster AI</h1>
-          <img src="http://127.0.0.1:8000/storage/img/PosterLogo2.png" alt="Poster Logo" class="h-12" />
-        </div>
-        <div class="flex items-center space-x-4">
-          <span class="text-2xl font-bold text-indigo-600">{{ userCoin }} Coins</span>
+    <!-- Main Chat Interface -->
+    <div class="chat-interface">
+      <!-- Header -->
+      <div class="chat-header">
+        <h1>Poster AI Chat</h1>
+        <div class="coin-display">
+          <span>{{ userCoin }}</span>
+          <span>Coins</span>
         </div>
       </div>
 
-      <!-- Chatbox -->
-      <div class="space-y-6">
-        <textarea
-          v-model="userPrompt"
-          :placeholder="selectedSocials.instagram ? 'Inserisci il prompt per Instagram...' : selectedSocials.tiktok ? 'Inserisci il prompt per TikTok...' : 'Inserisci il tuo prompt qui...'"
-          :disabled="isLoading"
-          class="w-full h-24 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-700 text-lg transition-all duration-300 ease-in-out"
-        ></textarea>
-
-        <!-- Selezione delle piattaforme e invio -->
-        <div class="flex flex-col space-y-4">
-          <!-- Selezione delle piattaforme -->
-          <div class="flex justify-between space-x-2">
-            <button
-              v-for="platform in ['instagram', 'tiktok', 'twitter', 'facebook']"
-              :key="platform"
-              @click="toggleSelection(platform)"
-              :disabled="isLoading"
-              :class="{
-                'bg-indigo-600 platform-selected': selectedSocials[platform],
-                'bg-gray-300': !selectedSocials[platform],
-                'opacity-50 cursor-not-allowed': isLoading
-              }"
-              class="text-white font-semibold text-lg w-16 h-16 rounded-full transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center"
-            >
-              <font-awesome-icon :icon="['fab', platform]" class="text-2xl" />
-            </button>
+      <!-- Chat History -->
+      <div class="chat-history">
+        <div v-for="(entry, index) in promptHistory" :key="index" class="chat-entry">
+          <!-- User Prompt -->
+          <div class="user-message">
+            <div class="message-content">
+              {{ entry.prompt }}
+            </div>
           </div>
 
-          <!-- Bottone di invio -->
+          <!-- AI Responses -->
+          <div v-for="response in entry.responses" :key="response.platform" class="ai-message">
+            <div class="platform-icon">
+              <font-awesome-icon :icon="['fab', response.platform]" />
+            </div>
+            <div class="message-content">
+              <div v-if="response.isGenerating" class="loading-message">
+                <font-awesome-icon :icon="['fas', 'spinner']" spin />
+                Generating...
+              </div>
+              <div v-else>
+                {{ response.content }}
+                <button @click="copyToClipboard(response.content)" class="copy-button">
+                  <font-awesome-icon :icon="['fas', 'copy']" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="chat-input">
+        <!-- Platform Selector -->
+        <div class="platform-selector">
           <button
-            @click="submitPrompt"
-            :disabled="isLoading"
-            class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-lg py-3 px-8 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            v-for="platform in ['instagram', 'tiktok', 'twitter', 'facebook']"
+            :key="platform"
+            @click="toggleSelection(platform)"
+            :class="{ active: selectedSocials[platform] }"
           >
-            {{ isLoading ? 'Generazione...' : 'Invia il Prompt' }}
+            <font-awesome-icon :icon="['fab', platform]" />
           </button>
         </div>
-      </div>
-    </div>
 
-    <!-- Contenitore della cronologia -->
-    <div class="bg-custom-chatbox shadow-lg rounded-xl p-6 max-w-2xl w-full h-80 overflow-y-auto mb-8">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-900">Chat History</h2>
-        <button
-          @click="clearHistory"
-          class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full transition-transform duration-300 transform hover:scale-105 shadow-md"
-        >
-          <font-awesome-icon :icon="['fas', 'trash']" class="mr-2" />
-          Clear History
-        </button>
-      </div>
-
-      <div v-if="promptHistory.length > 0" class="space-y-4">
-        <div v-for="(entry, index) in promptHistory" :key="index" class="space-y-2 pb-4 border-b border-gray-200 last:border-b-0 fade-enter-active">
-          <div class="text-sm text-gray-500">{{ entry.timestamp }}</div>
-          <div v-if="entry.prompt">
-            <div class="flex justify-end">
-              <div class="bg-indigo-500 text-white p-3 rounded-2xl max-w-[75%] shadow-md">
-                <p class="text-sm font-medium mb-1">Tu:</p>
-                <p class="text-base leading-tight">{{ entry.prompt }}</p>
-              </div>
-            </div>
-
-            <div v-if="entry.responses">
-              <div v-for="response in entry.responses" :key="response.platform" class="flex justify-start mt-3">
-                <div 
-                  class="bg-gray-100 text-gray-800 p-3 rounded-2xl max-w-[75%] shadow-md border-l-4 relative message-bubble"
-                  :class="{
-                    'border-pink-500': response.platform === 'instagram',
-                    'border-blue-400': response.platform === 'tiktok',
-                    'border-blue-500': response.platform === 'twitter',
-                    'border-blue-700': response.platform === 'facebook',
-                  }"
-                >
-                  <div class="flex items-center mb-2">
-                    <font-awesome-icon :icon="['fab', response.platform]" class="platform-icon" 
-                      :class="{
-                        'text-pink-500': response.platform === 'instagram',
-                        'text-blue-400': response.platform === 'tiktok',
-                        'text-blue-500': response.platform === 'twitter',
-                        'text-blue-700': response.platform === 'facebook',
-                      }"
-                      :spin="response.isGenerating"
-                    />
-                    <p class="text-sm font-medium">Poster AI ({{ response.platform }}):</p>
-                  </div>
-                  <p v-if="response.isGenerating" class="text-base leading-tight flex items-center">
-                    <font-awesome-icon :icon="['fas', 'spinner']" spin class="mr-2" />
-                    Generating...
-                  </p>
-                  <p v-else class="text-base leading-tight">{{ response.content }}</p>
-                  <button 
-                    v-if="!response.isGenerating"
-                    @click="copyToClipboard(response.content)" 
-                    class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 copy-button"
-                  >
-                    <font-awesome-icon :icon="['fas', 'copy']" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- Text Input -->
+        <div class="text-input">
+          <textarea
+            v-model="userPrompt"
+            placeholder="Type your prompt here..."
+            :disabled="isLoading"
+          ></textarea>
+          <button @click="submitPrompt" :disabled="isLoading">
+            <font-awesome-icon :icon="['fas', isLoading ? 'spinner' : 'paper-plane']" :spin="isLoading" />
+          </button>
         </div>
-      </div>
-      <div v-else class="text-center text-gray-500 mt-4">
-        No chat history available.
       </div>
     </div>
   </div>
 </template>
 
+<style scoped>
+.chat-container {
+  @apply h-full flex flex-col bg-gray-50;
+}
+
+.notification {
+  @apply fixed top-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-md z-50;
+}
+
+.chat-interface {
+  @apply flex flex-col h-full max-w-3xl mx-auto w-full bg-white shadow-lg rounded-lg overflow-hidden;
+}
+
+.chat-header {
+  @apply flex justify-between items-center p-4 border-b border-gray-200;
+  h1 {
+    @apply text-xl font-bold text-gray-800;
+  }
+  .coin-display {
+    @apply flex items-center space-x-2 bg-gray-100 px-3 py-1 rounded-full;
+    span {
+      @apply text-sm font-medium;
+      &:first-child {
+        @apply text-indigo-600;
+      }
+    }
+  }
+}
+
+.chat-history {
+  @apply flex-1 overflow-y-auto p-4 space-y-4;
+}
+
+.chat-entry {
+  @apply space-y-2;
+}
+
+.user-message {
+  @apply flex justify-end;
+  .message-content {
+    @apply bg-indigo-500 text-white px-4 py-2 rounded-2xl rounded-br-none max-w-[80%];
+  }
+}
+
+.ai-message {
+  @apply flex items-start space-x-2;
+  .platform-icon {
+    @apply text-xl p-2 rounded-full;
+    &.instagram { @apply text-pink-500; }
+    &.tiktok { @apply text-blue-400; }
+    &.twitter { @apply text-blue-500; }
+    &.facebook { @apply text-blue-700; }
+  }
+  .message-content {
+    @apply bg-gray-100 px-4 py-2 rounded-2xl rounded-bl-none max-w-[80%] relative;
+    .loading-message {
+      @apply flex items-center space-x-2;
+    }
+    .copy-button {
+      @apply absolute -right-2 -top-2 bg-white p-1 rounded-full shadow-md text-gray-500 hover:text-gray-700;
+    }
+  }
+}
+
+.chat-input {
+  @apply border-t border-gray-200 p-4;
+}
+
+.platform-selector {
+  @apply flex justify-center space-x-2 mb-4;
+  button {
+    @apply p-2 rounded-full transition-all duration-200;
+    &:hover {
+      @apply transform scale-110;
+    }
+    &.active {
+      @apply bg-indigo-100 text-indigo-600;
+    }
+  }
+}
+
+.text-input {
+  @apply flex items-center space-x-2;
+  textarea {
+    @apply flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none;
+    min-height: 3rem;
+    max-height: 8rem;
+  }
+  button {
+    @apply p-3 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-all duration-200;
+    &:disabled {
+      @apply opacity-50 cursor-not-allowed;
+    }
+  }
+}
+</style>
